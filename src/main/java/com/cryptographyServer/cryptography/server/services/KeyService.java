@@ -2,6 +2,9 @@ package com.cryptographyServer.cryptography.server.services;
 
 
 import java.security.*;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 import java.util.HashMap;
 import javax.crypto.BadPaddingException;
@@ -49,6 +52,21 @@ public class KeyService {
     public String encodeKey(Key key) {
         byte[] keyBytes = key.getEncoded();
         return Base64.getEncoder().encodeToString(keyBytes);
+    }
+
+    public PublicKey decodePublicKey(String keyStr) throws NoSuchAlgorithmException, InvalidKeySpecException {
+        byte[] keyBytes = Base64.getDecoder().decode(keyStr);
+        X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        PublicKey key = keyFactory.generatePublic(spec);
+        return key;
+    }
+    public PrivateKey decodePrivateKey(String keyStr) throws NoSuchAlgorithmException, InvalidKeySpecException {
+        byte[] keyBytes = Base64.getDecoder().decode(keyStr);
+        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(keyBytes);
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        PrivateKey key = keyFactory.generatePrivate(keySpec);
+        return key;
     }
 
     @PostConstruct
