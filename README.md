@@ -7,7 +7,9 @@ This program aims to provide the means to encrypt and decrypt and sign and verif
 
 # Information
 Server port = 8081.
+
 The Swagger-ui console on localhost: http://localhost:8081/swagger-ui/
+
 The H2 console on localhost: http://localhost:8081/h2-console/
 
 I generate RSA keys of 2048 bits as these are of good strength today.
