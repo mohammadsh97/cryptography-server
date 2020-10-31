@@ -9,15 +9,15 @@ import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.annotation.PostConstruct;
-
 import org.springframework.stereotype.Component;
 
 @Component
-public class CipherUtilityService {
+public class KeyService {
+    public static String uniqueID;
 
-    public static int id = 0;
+    public static String data;
 
-    public HashMap<Integer, KeyPair> map = new HashMap<>();
+    public HashMap<String, KeyPair> map = new HashMap<>();
 
     private static KeyPairGenerator keyPairGenerator = null;
 
@@ -30,7 +30,7 @@ public class CipherUtilityService {
     public String encrypt(String KeyId, String data) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
 
         Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-        cipher.init(Cipher.ENCRYPT_MODE, getKeyPair(Integer.parseInt(KeyId)).getPublic());
+        cipher.init(Cipher.ENCRYPT_MODE, getKeyPair(KeyId).getPublic());
         byte[] cipherContent = cipher.doFinal(data.getBytes());
 
         return Base64.getEncoder().encodeToString(cipherContent);
@@ -39,7 +39,7 @@ public class CipherUtilityService {
     public String decrypt(String encryptedData, String id) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
 
         Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-        cipher.init(Cipher.DECRYPT_MODE, getKeyPair(Integer.parseInt(id)).getPrivate());
+        cipher.init(Cipher.DECRYPT_MODE, getKeyPair(id).getPrivate());
         byte[] cipherContentBytes = Base64.getDecoder().decode(encryptedData.getBytes());
         byte[] decryptedContent = cipher.doFinal(cipherContentBytes);
 
@@ -61,15 +61,15 @@ public class CipherUtilityService {
         }
     }
 
-    public HashMap<Integer, KeyPair> getMap() {
+    public HashMap<String, KeyPair> getMap() {
         return map;
     }
 
-    public KeyPair getKeyPair(int id) {
+    public KeyPair getKeyPair(String id) {
         return map.get(id);
     }
 
-    public void addKey(int id, KeyPair KeyPair) {
+    public void addKey(String id, KeyPair KeyPair) {
         getMap().put(id, KeyPair);
     }
 
