@@ -1,17 +1,17 @@
 package com.cryptographyServer.cryptography.server.services;
 
-
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
-import java.util.HashMap;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.annotation.PostConstruct;
+
+import com.cryptographyServer.cryptography.server.entity.KeyEntity;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -20,7 +20,7 @@ public class KeyService {
 
     public static String data;
 
-    public HashMap<String, KeyPair> map = new HashMap<>();
+//    public HashMap<String, KeyPair> map = new HashMap<>();
 
     private static KeyPairGenerator keyPairGenerator = null;
 
@@ -30,19 +30,20 @@ public class KeyService {
         return keyPairGenerator.generateKeyPair();
     }
 
-    public String encrypt(String KeyId, String data) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+    public String encrypt(KeyEntity keyEntity, String data) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InvalidKeySpecException {
 
         Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-        cipher.init(Cipher.ENCRYPT_MODE, getKeyPair(KeyId).getPublic());
+
+        cipher.init(Cipher.ENCRYPT_MODE, decodePublicKey(keyEntity.getPublicKey()));
         byte[] cipherContent = cipher.doFinal(data.getBytes());
 
         return Base64.getEncoder().encodeToString(cipherContent);
     }
 
-    public String decrypt(String encryptedData, String id) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
+    public String decrypt(String encryptedData, KeyEntity keyEntity) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, InvalidKeySpecException {
 
         Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-        cipher.init(Cipher.DECRYPT_MODE, getKeyPair(id).getPrivate());
+        cipher.init(Cipher.DECRYPT_MODE, decodePrivateKey(keyEntity.getPrivateKey()));
         byte[] cipherContentBytes = Base64.getDecoder().decode(encryptedData.getBytes());
         byte[] decryptedContent = cipher.doFinal(cipherContentBytes);
 
@@ -61,6 +62,7 @@ public class KeyService {
         PublicKey key = keyFactory.generatePublic(spec);
         return key;
     }
+
     public PrivateKey decodePrivateKey(String keyStr) throws NoSuchAlgorithmException, InvalidKeySpecException {
         byte[] keyBytes = Base64.getDecoder().decode(keyStr);
         PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(keyBytes);
@@ -79,16 +81,16 @@ public class KeyService {
         }
     }
 
-    public HashMap<String, KeyPair> getMap() {
-        return map;
-    }
+//    public HashMap<String, KeyPair> getMap() {
+//        return map;
+//    }
 
-    public KeyPair getKeyPair(String id) {
-        return map.get(id);
-    }
+//    public KeyPair getKeyPair(String id) {
+//        return map.get(id);
+//    }
 
-    public void addKey(String id, KeyPair KeyPair) {
-        getMap().put(id, KeyPair);
-    }
+//    public void addKey(String id, KeyPair KeyPair) {
+//        getMap().put(id, KeyPair);
+//    }
 
 }

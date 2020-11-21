@@ -1,9 +1,8 @@
 package com.cryptographyServer.cryptography.server.controller;
 
 import java.security.*;
-import java.util.Base64;
-import java.util.Map;
-import java.util.UUID;
+import java.security.spec.InvalidKeySpecException;
+import java.util.*;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
@@ -31,16 +30,32 @@ public class KeyController {
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
+    public Iterable<KeyEntity> getListOfKeyEntity() {
+        return keyRepository.findAll();
+    }
+
+    public KeyEntity getListOfKeyEntityByUniqueID(String uniqueID) {
+        return keyRepository.findByUniqueID(uniqueID);
+    }
+
     @GetMapping(path = "/")
     public String getAllKeys() throws JSONException {
         StringBuilder result = new StringBuilder("KeyId, publicKey \n");
-        for (Map.Entry<String, KeyPair> m : keyService.getMap().entrySet()) {
-            result.append(m.getKey()).append(", ").
-                    append(keyService.encodeKey(m.getValue().getPublic())).append(" \n");
+//        for (Map.Entry<String, KeyPair> m : keyService.getMap().entrySet()) {
+//            result.append(m.getKey()).append(", ").
+//                    append(keyService.encodeKey(m.getValue().getPublic())).append(" \n");
+//        }
+
+        Iterator itr = getListOfKeyEntity().iterator();
+
+        while (itr.hasNext()) {
+            KeyEntity element = (KeyEntity) itr.next();
+            result.append(element.getUniqueID()).append(", ").
+                    append(element.getPublicKey()).append(" \n");
         }
 
         JSONArray toJSONArray = CDL.toJSONArray(result.toString());
-
+        logger.debug("View all keys generated....");
         return String.valueOf(toJSONArray);
     }
 
@@ -48,37 +63,44 @@ public class KeyController {
     public String generateKeys() throws JSONException {
         // Initialization of key pair for encryption and decryption.
         KeyPair keyPair = keyService.getKeyPair();
+
+        logger.debug("generate pair key....");
+
         KeyService.uniqueID = UUID.randomUUID().toString();
-        keyService.addKey(KeyService.uniqueID, keyPair);
+//        keyService.addKey(KeyService.uniqueID, keyPair);
         keyRepository.save(
                 new KeyEntity(KeyService.uniqueID,
                         keyService.encodeKey(keyPair.getPrivate()),
                         keyService.encodeKey(keyPair.getPublic())));
 
+        logger.debug("saved key in DB....");
+
         JSONObject result = new JSONObject();
-        result.put("KeyId", KeyService.uniqueID);
+        result.put("keyId", KeyService.uniqueID);
 
         return String.valueOf(result);
     }
 
     @PostMapping("/encrypt")
-    public String encrypt(@RequestBody Map<String, String> jsonData) throws IllegalBlockSizeException, InvalidKeyException, BadPaddingException, NoSuchAlgorithmException, NoSuchPaddingException {
+    public String encrypt(@RequestBody Map<String, String> jsonData) throws IllegalBlockSizeException, InvalidKeyException, BadPaddingException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeySpecException {
         String keyId = jsonData.get("keyId"), data = jsonData.get("data");
 
         // Save the data
         KeyService.data = data;
 
         // Encrypt plain as a cipher.
-        String encryptData = keyService.encrypt(keyId, data);
+        String encryptData = keyService.encrypt(getListOfKeyEntityByUniqueID(keyId), data);
 
         JSONObject result = new JSONObject();
         result.put("EncryptData", encryptData);
+
+        logger.debug("encrypted the data....");
 
         return String.valueOf(result);
     }
 
     @PostMapping(value = "/decrypt")
-    public String decrypt(@RequestBody Map<String, String> jsonData) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, JSONException {
+    public String decrypt(@RequestBody Map<String, String> jsonData) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, JSONException, InvalidKeySpecException {
 
         String keyId = jsonData.get("keyId"), encryptedData = jsonData.get("encryptedData");
 
@@ -86,33 +108,42 @@ public class KeyController {
         encryptedData = encryptedData.replace(" ", "+");
 
         // Decrypt cipher to original plain.
-        String decryptResult = keyService.decrypt(encryptedData, keyId);
+        String decryptResult = keyService.decrypt(encryptedData, getListOfKeyEntityByUniqueID(keyId));
 
         JSONObject result = new JSONObject();
         result.put("DecryptData", decryptResult);
+
+        logger.debug("decrypted the encrypted data....");
 
         return String.valueOf(result);
     }
 
     @PostMapping("/sign")
-    public String sign(@RequestBody Map<String, String> jsonData) throws NoSuchAlgorithmException, SignatureException, InvalidKeyException {
+    public String sign(@RequestBody Map<String, String> jsonData) throws NoSuchAlgorithmException, SignatureException, InvalidKeyException, InvalidKeySpecException {
 
         String keyId = jsonData.get("keyId"), data = jsonData.get("data");
         Signature privateSignature = Signature.getInstance("SHA256withRSA");
-        privateSignature.initSign(keyService.getKeyPair(keyId).getPrivate());
+        privateSignature.initSign(keyService.decodePrivateKey(getListOfKeyEntityByUniqueID(keyId).getPrivateKey()));
         privateSignature.update(data.getBytes(UTF_8));
         byte[] signature = privateSignature.sign();
+
+        logger.debug("sign is success....");
+
         return Base64.getEncoder().encodeToString(signature);
     }
 
     @PostMapping("/verify")
-    public boolean verify(@RequestBody Map<String, String> jsonData) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+    public boolean verify(@RequestBody Map<String, String> jsonData) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, InvalidKeySpecException {
 
         String keyId = jsonData.get("keyId"), data = jsonData.get("data"), signature = jsonData.get("signature");
         Signature publicSignature = Signature.getInstance("SHA256withRSA");
-        publicSignature.initVerify(keyService.getKeyPair(keyId).getPublic());
+
+        publicSignature.initVerify(keyService.decodePublicKey(getListOfKeyEntityByUniqueID(keyId).getPublicKey()));
         publicSignature.update(data.getBytes(UTF_8));
         byte[] signatureBytes = Base64.getDecoder().decode(signature);
+
+        logger.debug("verify is success....");
+
         return publicSignature.verify(signatureBytes);
     }
 }

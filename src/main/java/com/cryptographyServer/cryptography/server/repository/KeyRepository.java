@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface KeyRepository extends CrudRepository<KeyEntity, Integer> {
+    KeyEntity findByUniqueID(String uniqueID);
 }
