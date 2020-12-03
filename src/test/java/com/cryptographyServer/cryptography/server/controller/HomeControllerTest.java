@@ -4,6 +4,7 @@ import com.cryptographyServer.cryptography.server.CryptographyServerApplication;
 import com.cryptographyServer.cryptography.server.entity.KeyEntity;
 import com.cryptographyServer.cryptography.server.repository.KeyRepository;
 import com.cryptographyServer.cryptography.server.services.KeyService;
+import org.apache.tomcat.util.codec.binary.Base64;
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
@@ -13,7 +14,6 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.security.*;
 import java.util.UUID;
-import java.util.logging.Logger;
 
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -33,6 +33,7 @@ class HomeControllerTest {
     void CryptographyServerTest() throws Exception {
         KeyService.uniqueID = UUID.randomUUID().toString();
         String text = "Lets go!";
+
 
         // Initialization of key pair for encryption and decryption.
         KeyPair keyPair = initialization();
@@ -105,6 +106,4 @@ class HomeControllerTest {
             Assert.assertEquals(keyEntity.getPublicKey(), publicKey);
         } else throw new Exception("Error, the DB is null");
     }
-
-
 }

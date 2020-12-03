@@ -6,7 +6,11 @@ import java.util.*;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+
 import com.cryptographyServer.cryptography.server.entity.KeyEntity;
+import com.cryptographyServer.cryptography.server.model.Crypto;
+import com.cryptographyServer.cryptography.server.model.Decrypt;
+import com.cryptographyServer.cryptography.server.model.Verify;
 import com.cryptographyServer.cryptography.server.repository.KeyRepository;
 import org.json.*;
 import com.cryptographyServer.cryptography.server.services.KeyService;
@@ -15,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.*;
+
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 @Service
@@ -82,9 +87,10 @@ public class KeyController {
     }
 
     @PostMapping("/encrypt")
-    public String encrypt(@RequestBody Map<String, String> jsonData) throws IllegalBlockSizeException, InvalidKeyException, BadPaddingException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeySpecException {
-        String keyId = jsonData.get("keyId"), data = jsonData.get("data");
-
+    public String encrypt(@RequestBody Crypto jsonData) throws IllegalBlockSizeException, InvalidKeyException, BadPaddingException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeySpecException {
+//        String keyId = jsonData.get("keyId"), data = jsonData.get("data");
+        String keyId = jsonData.getKeyId();
+        String data = jsonData.getData();
         // Save the data
         KeyService.data = data;
 
@@ -100,9 +106,11 @@ public class KeyController {
     }
 
     @PostMapping(value = "/decrypt")
-    public String decrypt(@RequestBody Map<String, String> jsonData) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, JSONException, InvalidKeySpecException {
+    public String decrypt(@RequestBody Decrypt jsonData) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, JSONException, InvalidKeySpecException {
 
-        String keyId = jsonData.get("keyId"), encryptedData = jsonData.get("encryptedData");
+//        String keyId = jsonData.get("keyId"), encryptedData = jsonData.get("encryptedData");
+        String keyId = jsonData.getKeyId();
+        String encryptedData = jsonData.getEncryptedData();
 
         // replaces all occurrences of " " to "+"
         encryptedData = encryptedData.replace(" ", "+");
@@ -119,9 +127,12 @@ public class KeyController {
     }
 
     @PostMapping("/sign")
-    public String sign(@RequestBody Map<String, String> jsonData) throws NoSuchAlgorithmException, SignatureException, InvalidKeyException, InvalidKeySpecException {
+    public String sign(@RequestBody Crypto jsonData) throws NoSuchAlgorithmException, SignatureException, InvalidKeyException, InvalidKeySpecException {
 
-        String keyId = jsonData.get("keyId"), data = jsonData.get("data");
+//        String keyId = jsonData.get("keyId"), data = jsonData.get("data");
+        String keyId = jsonData.getKeyId();
+        String data = jsonData.getData();
+
         Signature privateSignature = Signature.getInstance("SHA256withRSA");
         privateSignature.initSign(keyService.decodePrivateKey(getListOfKeyEntityByUniqueID(keyId).getPrivateKey()));
         privateSignature.update(data.getBytes(UTF_8));
@@ -133,9 +144,9 @@ public class KeyController {
     }
 
     @PostMapping("/verify")
-    public boolean verify(@RequestBody Map<String, String> jsonData) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, InvalidKeySpecException {
+    public boolean verify(@RequestBody Verify jsonData) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, InvalidKeySpecException {
 
-        String keyId = jsonData.get("keyId"), data = jsonData.get("data"), signature = jsonData.get("signature");
+        String keyId = jsonData.getKeyId(), data = jsonData.getData().toString(), signature = jsonData.getSignature().toString();
         Signature publicSignature = Signature.getInstance("SHA256withRSA");
 
         publicSignature.initVerify(keyService.decodePublicKey(getListOfKeyEntityByUniqueID(keyId).getPublicKey()));

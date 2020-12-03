@@ -20,8 +20,6 @@ public class KeyService {
 
     public static String data;
 
-//    public HashMap<String, KeyPair> map = new HashMap<>();
-
     private static KeyPairGenerator keyPairGenerator = null;
 
     private final SecureRandom random = new SecureRandom();
@@ -80,17 +78,4 @@ public class KeyService {
             e.printStackTrace();
         }
     }
-
-//    public HashMap<String, KeyPair> getMap() {
-//        return map;
-//    }
-
-//    public KeyPair getKeyPair(String id) {
-//        return map.get(id);
-//    }
-
-//    public void addKey(String id, KeyPair KeyPair) {
-//        getMap().put(id, KeyPair);
-//    }
-
 }
