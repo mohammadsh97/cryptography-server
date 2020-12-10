@@ -138,15 +138,18 @@ public class KeyController {
         privateSignature.update(data.getBytes(UTF_8));
         byte[] signature = privateSignature.sign();
 
+        JSONObject result = new JSONObject();
+        result.put("sign", Base64.getEncoder().encodeToString(signature));
+
         logger.debug("sign is success....");
 
-        return Base64.getEncoder().encodeToString(signature);
+        return String.valueOf(result);
     }
 
     @PostMapping("/verify")
     public boolean verify(@RequestBody Verify jsonData) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, InvalidKeySpecException {
 
-        String keyId = jsonData.getKeyId(), data = jsonData.getData().toString(), signature = jsonData.getSignature().toString();
+        String keyId = jsonData.getKeyId(), data = jsonData.getData(), signature = jsonData.getSignature();
         Signature publicSignature = Signature.getInstance("SHA256withRSA");
 
         publicSignature.initVerify(keyService.decodePublicKey(getListOfKeyEntityByUniqueID(keyId).getPublicKey()));

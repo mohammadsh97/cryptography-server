@@ -5,13 +5,13 @@ import java.util.Base64;
 public class Verify {
 
     private String keyId;
-    private Base64 data;
-    private Base64 signature;
+    private String data;
+    private String signature;
 
     public Verify() {
     }
 
-    public Verify(String keyId, Base64 data, Base64 signature) {
+    public Verify(String keyId, String data, String signature) {
         this.keyId = keyId;
         this.data = data;
         this.signature = signature;
@@ -25,19 +25,19 @@ public class Verify {
         this.keyId = keyId;
     }
 
-    public Base64 getData() {
+    public String getData() {
         return data;
     }
 
-    public void setData(Base64 data) {
+    public void setData(String data) {
         this.data = data;
     }
 
-    public Base64 getSignature() {
+    public String getSignature() {
         return signature;
     }
 
-    public void setSignature(Base64 signature) {
+    public void setSignature(String signature) {
         this.signature = signature;
     }
 }
