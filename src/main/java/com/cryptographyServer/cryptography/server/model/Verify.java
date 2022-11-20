@@ -2,9 +2,8 @@ package com.cryptographyServer.cryptography.server.model;
 
 import java.util.Base64;
 
-public class Verify {
+public class Verify extends KeyId {
 
-    private String keyId;
     private String data;
     private String signature;
 
@@ -12,17 +11,9 @@ public class Verify {
     }
 
     public Verify(String keyId, String data, String signature) {
-        this.keyId = keyId;
+        setKeyId(keyId);
         this.data = data;
         this.signature = signature;
-    }
-
-    public String getKeyId() {
-        return keyId;
-    }
-
-    public void setKeyId(String keyId) {
-        this.keyId = keyId;
     }
 
     public String getData() {

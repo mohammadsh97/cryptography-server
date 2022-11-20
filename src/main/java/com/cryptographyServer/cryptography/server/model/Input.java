@@ -1,23 +1,14 @@
 package com.cryptographyServer.cryptography.server.model;
 
-public class Input {
-    private String keyId;
+public class Input extends KeyId {
     private Byte data;
 
     public Input() {
     }
 
     public Input(String keyId, Byte data) {
-        this.keyId = keyId;
+        setKeyId(keyId);
         this.data = data;
-    }
-
-    public String getKeyId() {
-        return keyId;
-    }
-
-    public void setKeyId(String keyId) {
-        this.keyId = keyId;
     }
 
     public Byte getData() {
