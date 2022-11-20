@@ -12,9 +12,10 @@ public class KeyEntity {
     private int id;
     @Column
     private String uniqueID;
-    @Column(columnDefinition="TEXT")
+
+    @Column(columnDefinition = "TEXT")
     private String privateKey;
-    @Column(columnDefinition="TEXT")
+    @Column(columnDefinition = "TEXT")
     private String publicKey;
 
     public KeyEntity() {
