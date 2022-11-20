@@ -24,16 +24,13 @@ class HomeControllerTest {
     private KeyService keyService;
 
     @Autowired
-    private KeyController keyController;
-
-    @Autowired
     private KeyRepository repository;
+
+    private String uniqueID = UUID.randomUUID().toString();
 
     @Test
     void CryptographyServerTest() throws Exception {
-        KeyService.uniqueID = UUID.randomUUID().toString();
         String text = "Lets go!";
-
 
         // Initialization of key pair for encryption and decryption.
         KeyPair keyPair = initialization();
@@ -59,13 +56,13 @@ class HomeControllerTest {
         saveHibernate(privKeyStr, pubKeyStr);
 
         // check if the hibernate save success
-        checkHibernate(KeyService.uniqueID, privKeyStr, pubKeyStr);
+        checkHibernate(uniqueID, privKeyStr, pubKeyStr);
 
         // Encrypt data as a cipher.
-        String encryptedData = keyService.encrypt(repository.findByUniqueID(KeyService.uniqueID), text);
+        String encryptedData = keyService.encryptHelper(repository.findByUniqueID(uniqueID), text);
 
         // Decrypt cipher to original plain.
-        String decryptData = keyService.decrypt(encryptedData, repository.findByUniqueID(KeyService.uniqueID));
+        String decryptData = keyService.decryptHelper(encryptedData, repository.findByUniqueID(uniqueID));
 
         // Assertion of 'plain' and 'decryptResult'.
         assertEqualsStr(text, decryptData);
@@ -90,7 +87,7 @@ class HomeControllerTest {
 
     // save to DB
     private void saveHibernate(String privateKey, String publicKey) {
-        repository.save(new KeyEntity(KeyService.uniqueID, privateKey, publicKey));
+        repository.save(new KeyEntity(uniqueID, privateKey, publicKey));
     }
 
     // assert equal String
@@ -100,7 +97,7 @@ class HomeControllerTest {
 
     // check hibernate
     private void checkHibernate(String uniqueID, String privateKey, String publicKey) throws Exception {
-        KeyEntity keyEntity = keyController.getListOfKeyEntityByUniqueID(uniqueID);
+        KeyEntity keyEntity = keyService.getListOfKeyEntityByUniqueID(uniqueID);
         if (keyEntity != null) {
             Assert.assertEquals(keyEntity.getPrivateKey(), privateKey);
             Assert.assertEquals(keyEntity.getPublicKey(), publicKey);
